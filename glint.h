@@ -1,11 +1,12 @@
 #pragma once
 
+#include <arpa/inet.h>
+#include <signal.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -13,6 +14,7 @@ typedef void (*glint_callback)(uint16_t port);
 typedef struct {
   uint16_t port;
   glint_callback *cb;
+  pid_t pid;
 } glint;
 
 glint *glint_new() {
@@ -20,15 +22,13 @@ glint *glint_new() {
   return self;
 }
 
-void glint_free(glint *self) { free(self); }
-
 uint16_t glint_empty_port() {
   int sock;
 
   struct sockaddr_in server;
   server.sin_family = AF_INET;
-  server.sin_port = htons(0);
   server.sin_addr.s_addr = htonl(INADDR_ANY);
+  server.sin_port = htons(0);
 
   if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
     perror("failed to create a socket");
@@ -48,3 +48,61 @@ uint16_t glint_empty_port() {
   close(sock);
   return (uint16_t)ntohs(server.sin_port);
 }
+
+bool glint_start(glint *self) {
+  self->port = glint_empty_port();
+  if (self->port == 0) {
+    return false;
+  }
+
+  self->pid = fork();
+
+  if (self->pid == -1) {
+    perror("failed to fork a process");
+    return false;
+  } else if (self->pid == 0) {
+    // child process
+    (*self->cb)(self->port);
+    exit(1);
+  } else {
+    // parent process
+    int sock;
+    struct sockaddr_in client;
+    client.sin_family = PF_INET;
+    client.sin_addr.s_addr = inet_addr("127.0.0.1");
+    client.sin_port = htons(self->port);
+
+    // wait the port until connection established
+    for (int i = 100; i > 0; i--) {
+      if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("failed to create a socket");
+        continue;
+      }
+      if (connect(sock, (struct sockaddr *)&client, sizeof(client)) < 0) {
+        continue;
+      } else {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+void glint_stop(glint *self) {
+  int status;
+
+  kill(self->pid, SIGTERM);
+
+  if (waitpid(self->pid, &status, 0) < 0) {
+    perror("can not wait a child process");
+    exit(1);
+  }
+  if (WIFSIGNALED(status)) {
+    printf("child process exited by %d\n", WTERMSIG(status));
+  }
+}
+
+void glint_free(glint *self) { free(self); }

@@ -11,13 +11,16 @@ int main() {
   glint *g = glint_new(my_glint_callback);
 
   // start the server with a port retrieved automatically
-  glint_start(g)
+  if (!glint_start(g)) {
+    perror("failed to start the server");
+    exit(1);
+  }
 
   // access the server using the port
   client_connect('127.0.0.1', g.port);
 
   // cleanup the server process
-  glint_cleanup(g);
+  glint_stop(g);
 }
 ```
 
