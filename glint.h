@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -9,10 +9,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+typedef void (*glint_callback)(uint16_t port);
 typedef struct {
   uint16_t port;
-  char *cmd;
-  char **args;
+  glint_callback *cb;
 } glint;
 
 glint *glint_new() {
