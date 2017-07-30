@@ -23,7 +23,6 @@ glint *glint_new() {
 void glint_free(glint *self) { free(self); }
 
 uint16_t glint_empty_port() {
-    uint16_t port;
   int sock;
 
   struct sockaddr_in server;
