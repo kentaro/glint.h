@@ -26,7 +26,6 @@ uint16_t glint_empty_port() {
   int sock;
 
   struct sockaddr_in server;
-  memset(&server, 0, sizeof(struct sockaddr_in));
   server.sin_family = AF_INET;
   server.sin_port = htons(0);
   server.sin_addr.s_addr = htonl(INADDR_ANY);
