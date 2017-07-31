@@ -84,7 +84,7 @@ bool glint_start(glint *self) {
       int sock;
       if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("failed to create a socket");
-        false;
+        return false;
       }
 
       if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
