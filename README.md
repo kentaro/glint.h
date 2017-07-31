@@ -5,6 +5,8 @@ Spawns an arbitrary TCP server temporarily with an automatically retrieved port.
 ## Usage
 
 ```C
+#include "glint.h"
+
 // Assume the server is the target of your integration test
 void my_glint_callback(uint16_t port) {
   execl("tests/test-server.rb", "ruby", port, (char *)NULL);
