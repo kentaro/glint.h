@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 typedef void (*glint_callback)(char *port);
@@ -82,7 +84,7 @@ bool glint_start(glint *self) {
       int sock;
       if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("failed to create a socket");
-        false;
+        return false;
       }
 
       if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
