@@ -10,9 +10,9 @@ void my_glint_callback(char *port) {
 }
 
 static void test_glint_new() {
-    glint *self = glint_new(my_glint_callback);
-    ok(self != NULL);
-    glint_free(self);
+  glint *self = glint_new(my_glint_callback);
+  ok(self != NULL);
+  glint_free(self);
 }
 
 static void test_glint_start() {
@@ -26,8 +26,8 @@ static void test_glint_start() {
 }
 
 static void test_glint_empty_port() {
-    uint16_t port = glint_empty_port();
-    ok(port != 0);
+  uint16_t port = glint_empty_port();
+  ok(port != 0);
 }
 
 int main(int argc, char **argv) {
