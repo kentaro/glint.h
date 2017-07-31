@@ -22,7 +22,7 @@ int main() {
   }
 
   // access the server using the port
-  client_connect('127.0.0.1', g.port);
+  your_client_connect('127.0.0.1', g.port);
 
   // do something with the server
 
