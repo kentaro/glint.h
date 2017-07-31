@@ -10,15 +10,20 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-typedef void (*glint_callback)(uint16_t port);
+typedef void (*glint_callback)(char *port);
 typedef struct {
   uint16_t port;
-  glint_callback *cb;
+  glint_callback cb;
   pid_t pid;
 } glint;
 
-glint *glint_new() {
+glint *glint_new(glint_callback cb) {
   glint *self = (glint *)calloc(sizeof(glint), 1);
+  if (self == NULL) {
+    return NULL;
+  }
+
+  self->cb = cb;
   return self;
 }
 
@@ -62,25 +67,30 @@ bool glint_start(glint *self) {
     return false;
   } else if (self->pid == 0) {
     // child process
-    (*self->cb)(self->port);
-    exit(1);
+    char port[6];
+    snprintf(port, 6, "%d", self->port);
+    self->cb(port);
   } else {
     // parent process
-    int sock;
-    struct sockaddr_in client;
-    client.sin_family = PF_INET;
-    client.sin_addr.s_addr = inet_addr("127.0.0.1");
-    client.sin_port = htons(self->port);
+    struct sockaddr_in server;
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_port = htons(self->port);
 
     // wait the port until connection established
     for (int i = 100; i > 0; i--) {
+      int sock;
       if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("failed to create a socket");
-        continue;
+        false;
       }
-      if (connect(sock, (struct sockaddr *)&client, sizeof(client)) < 0) {
+
+      if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
+        close(sock);
+        usleep(100000);
         continue;
       } else {
+        close(sock);
         return true;
       }
     }
